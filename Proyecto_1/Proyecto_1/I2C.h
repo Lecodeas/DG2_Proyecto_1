@@ -6,7 +6,7 @@
  Proyecto: Librería para comunicación I2C
  Hardware: ATMEGA328P
  Creado: 05/02/2026
- Ultima modificacion: 05/02/2026
+ Ultima modificacion: 18/02/2026
     -----------------------------------------------
 */
 

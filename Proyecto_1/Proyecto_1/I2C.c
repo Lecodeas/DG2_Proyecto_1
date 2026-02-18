@@ -6,11 +6,12 @@
  Proyecto: Librería para comunicación I2C
  Hardware: ATMEGA328P
  Creado: 05/02/2026
- Ultima modificacion: 05/02/2026
+ Ultima modificacion: 18/02/2026
     -----------------------------------------------
 */
 
 #include "I2C.h"
+#include "UART.h"
 
 // MASTER SETUP
 void I2C_MasterSetup(unsigned long SCL_CLK, I2C_PRESC Prescaler){
@@ -51,6 +52,7 @@ void I2C_MasterSetup(unsigned long SCL_CLK, I2C_PRESC Prescaler){
 // MASTER START
 uint8_t I2C_MasterStart(void){
 	TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN); //Clear interrupt, Master Transmit y TWI
+	
 	while (!(TWCR & (1<<TWINT))); //Espera hasta que encienda la bandera
 	
 	return ((TWSR & 0xF8)==0x08); // Solo interesan los bits de estado

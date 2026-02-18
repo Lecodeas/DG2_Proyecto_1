@@ -2,7 +2,13 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+bmp280.c
+
 I2C.c
 
+lcd.c
+
 main.c
+
+UART.c
 
