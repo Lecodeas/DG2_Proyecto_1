@@ -19,15 +19,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   7 .debug_abbrev 00000cc7  00000000  00000000  000033e4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000ed2  00000000  00000000  000040ab  2**0
+  8 .debug_line   00000eba  00000000  00000000  000040ab  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000003f0  00000000  00000000  00004f80  2**2
+  9 .debug_frame  000003f0  00000000  00000000  00004f68  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00000809  00000000  00000000  00005370  2**0
+ 10 .debug_str    00000809  00000000  00000000  00005358  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000d56  00000000  00000000  00005b79  2**0
+ 11 .debug_loc    00000d56  00000000  00000000  00005b61  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000140  00000000  00000000  000068cf  2**0
+ 12 .debug_ranges 00000140  00000000  00000000  000068b7  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -369,6 +369,7 @@ uint8_t BMP280_Init(void)
      23e:	8c e8       	ldi	r24, 0x8C	; 140
      240:	0e 94 a6 00 	call	0x14c	; 0x14c <bmp280_readS16>
 
+	//DEBUGGING
 	UART_writeString("BMP:cfg\r\n");
      244:	81 e4       	ldi	r24, 0x41	; 65
      246:	91 e0       	ldi	r25, 0x01	; 1
@@ -431,6 +432,7 @@ uint8_t BMP280_Init(void)
      2b2:	89 e5       	ldi	r24, 0x59	; 89
      2b4:	91 e0       	ldi	r25, 0x01	; 1
      2b6:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
+	//DEBUGGING
 
 	return 1;
      2ba:	11 e0       	ldi	r17, 0x01	; 1
@@ -462,13 +464,13 @@ int32_t BMP280_ReadTempRaw(void)
      2da:	88 23       	and	r24, r24
      2dc:	09 f4       	brne	.+2      	; 0x2e0 <BMP280_ReadTempRaw+0x16>
      2de:	57 c0       	rjmp	.+174    	; 0x38e <BMP280_ReadTempRaw+0xc4>
-	if (!I2C_MasterWrite((BMP280_ADDR<<1) | 0)) return 0;
+	if (!I2C_MasterWrite((BMP280_ADDR<<1) | 0)) return 0; //Address del BMP
      2e0:	8c ee       	ldi	r24, 0xEC	; 236
      2e2:	0e 94 ff 02 	call	0x5fe	; 0x5fe <I2C_MasterWrite>
      2e6:	88 23       	and	r24, r24
      2e8:	09 f4       	brne	.+2      	; 0x2ec <BMP280_ReadTempRaw+0x22>
      2ea:	55 c0       	rjmp	.+170    	; 0x396 <BMP280_ReadTempRaw+0xcc>
-	if (!I2C_MasterWrite(0xFA)) return 0;
+	if (!I2C_MasterWrite(0xFA)) return 0; //Comando
      2ec:	8a ef       	ldi	r24, 0xFA	; 250
      2ee:	0e 94 ff 02 	call	0x5fe	; 0x5fe <I2C_MasterWrite>
      2f2:	88 23       	and	r24, r24
@@ -505,8 +507,7 @@ int32_t BMP280_ReadTempRaw(void)
 	I2C_MasterStop();
      32c:	0e 94 f7 02 	call	0x5ee	; 0x5ee <I2C_MasterStop>
 
-	int32_t raw =
-	((int32_t)buf[0]<<12) |
+	int32_t raw = ((int32_t)buf[0]<<12) | ((int32_t)buf[1]<<4) | (buf[2]>>4); //Todos los datos se combinan para el dato bruto
      330:	69 81       	ldd	r22, Y+1	; 0x01
      332:	86 2f       	mov	r24, r22
      334:	90 e0       	ldi	r25, 0x00	; 0
@@ -523,7 +524,6 @@ int32_t BMP280_ReadTempRaw(void)
      34a:	3a 95       	dec	r19
      34c:	d1 f7       	brne	.-12     	; 0x342 <BMP280_ReadTempRaw+0x78>
      34e:	30 2d       	mov	r19, r0
-	((int32_t)buf[1]<<4)  |
      350:	8a 81       	ldd	r24, Y+2	; 0x02
      352:	90 e0       	ldi	r25, 0x00	; 0
      354:	a0 e0       	ldi	r26, 0x00	; 0
@@ -544,28 +544,13 @@ int32_t BMP280_ReadTempRaw(void)
      372:	99 1f       	adc	r25, r25
      374:	aa 1f       	adc	r26, r26
      376:	bb 1f       	adc	r27, r27
-	I2C_MasterRead(&buf[1], 1); // LSB
-	I2C_MasterRead(&buf[2], 0); // XLSB (NACK)
-	I2C_MasterStop();
-
-	int32_t raw =
-	((int32_t)buf[0]<<12) |
      378:	84 2b       	or	r24, r20
      37a:	95 2b       	or	r25, r21
      37c:	a6 2b       	or	r26, r22
      37e:	b7 2b       	or	r27, r23
-	((int32_t)buf[1]<<4)  |
-	(buf[2]>>4);
      380:	2b 81       	ldd	r18, Y+3	; 0x03
-	I2C_MasterRead(&buf[2], 0); // XLSB (NACK)
-	I2C_MasterStop();
-
-	int32_t raw =
-	((int32_t)buf[0]<<12) |
-	((int32_t)buf[1]<<4)  |
      382:	22 95       	swap	r18
      384:	2f 70       	andi	r18, 0x0F	; 15
-	(buf[2]>>4);
 
 	return raw;
      386:	bc 01       	movw	r22, r24
@@ -582,12 +567,12 @@ int32_t BMP280_ReadTempRaw(void)
      390:	70 e0       	ldi	r23, 0x00	; 0
      392:	cb 01       	movw	r24, r22
      394:	0f c0       	rjmp	.+30     	; 0x3b4 <BMP280_ReadTempRaw+0xea>
-	if (!I2C_MasterWrite((BMP280_ADDR<<1) | 0)) return 0;
+	if (!I2C_MasterWrite((BMP280_ADDR<<1) | 0)) return 0; //Address del BMP
      396:	60 e0       	ldi	r22, 0x00	; 0
      398:	70 e0       	ldi	r23, 0x00	; 0
      39a:	cb 01       	movw	r24, r22
      39c:	0b c0       	rjmp	.+22     	; 0x3b4 <BMP280_ReadTempRaw+0xea>
-	if (!I2C_MasterWrite(0xFA)) return 0;
+	if (!I2C_MasterWrite(0xFA)) return 0; //Comando
      39e:	60 e0       	ldi	r22, 0x00	; 0
      3a0:	70 e0       	ldi	r23, 0x00	; 0
      3a2:	cb 01       	movw	r24, r22
@@ -602,9 +587,9 @@ int32_t BMP280_ReadTempRaw(void)
      3ae:	60 e0       	ldi	r22, 0x00	; 0
      3b0:	70 e0       	ldi	r23, 0x00	; 0
      3b2:	cb 01       	movw	r24, r22
-	((int32_t)buf[0]<<12) |
-	((int32_t)buf[1]<<4)  |
-	(buf[2]>>4);
+	I2C_MasterStop();
+
+	int32_t raw = ((int32_t)buf[0]<<12) | ((int32_t)buf[1]<<4) | (buf[2]>>4); //Todos los datos se combinan para el dato bruto
 
 	return raw;
 }
@@ -1495,7 +1480,8 @@ int main(void)
      884:	81 e0       	ldi	r24, 0x01	; 1
      886:	90 e0       	ldi	r25, 0x00	; 0
      888:	0e 94 7a 02 	call	0x4f4	; 0x4f4 <I2C_MasterSetup>
-	UART_writeString("I2C OK\r\n");
+	//DEBUGGING
+	UART_writeString("I2C OK\r\n");//Debugging
      88c:	8b e6       	ldi	r24, 0x6B	; 107
      88e:	91 e0       	ldi	r25, 0x01	; 1
      890:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1527,16 +1513,16 @@ int main(void)
      8c0:	88 e8       	ldi	r24, 0x88	; 136
      8c2:	91 e0       	ldi	r25, 0x01	; 1
      8c4:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-
+	//DEBUGGING
 	
 	//I2C shenanigans
 	BMP280_Init();
      8c8:	0e 94 df 00 	call	0x1be	; 0x1be <BMP280_Init>
-	UART_writeString("BMP280 OK\r\n");
+	UART_writeString("BMP280 OK\r\n");//Debugging
      8cc:	8f e7       	ldi	r24, 0x7F	; 127
      8ce:	91 e0       	ldi	r25, 0x01	; 1
      8d0:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-	//ESP32 shenanigans
+	//Dr. Bingus
 
     while (1) 
     {
@@ -1547,17 +1533,17 @@ int main(void)
      8d8:	0e 94 af 03 	call	0x75e	; 0x75e <GetSlaveData>
      8dc:	80 93 09 02 	sts	0x0209, r24	; 0x800209 <gas_condition>
 
-		UART_writeString("GAS=");
+		UART_writeString("GAS=");//Debugging
      8e0:	8b e8       	ldi	r24, 0x8B	; 139
      8e2:	91 e0       	ldi	r25, 0x01	; 1
      8e4:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(gas_condition);
+		UART_writeUInt(gas_condition);//Debugging
      8e8:	60 91 09 02 	lds	r22, 0x0209	; 0x800209 <gas_condition>
      8ec:	70 e0       	ldi	r23, 0x00	; 0
      8ee:	80 e0       	ldi	r24, 0x00	; 0
      8f0:	90 e0       	ldi	r25, 0x00	; 0
      8f2:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      8f6:	88 e8       	ldi	r24, 0x88	; 136
      8f8:	91 e0       	ldi	r25, 0x01	; 1
      8fa:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1613,17 +1599,17 @@ int main(void)
      968:	90 93 03 01 	sts	0x0103, r25	; 0x800103 <gas_text+0x1>
      96c:	80 93 02 01 	sts	0x0102, r24	; 0x800102 <gas_text>
 		}
-		UART_writeString("DC=");
+		UART_writeString("DC=");//Debugging
      970:	80 ea       	ldi	r24, 0xA0	; 160
      972:	91 e0       	ldi	r25, 0x01	; 1
      974:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(DC_Command);
+		UART_writeUInt(DC_Command);//Debugging
      978:	60 91 02 02 	lds	r22, 0x0202	; 0x800202 <DC_Command>
      97c:	70 e0       	ldi	r23, 0x00	; 0
      97e:	80 e0       	ldi	r24, 0x00	; 0
      980:	90 e0       	ldi	r25, 0x00	; 0
      982:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      986:	88 e8       	ldi	r24, 0x88	; 136
      988:	91 e0       	ldi	r25, 0x01	; 1
      98a:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1641,35 +1627,35 @@ int main(void)
      9a2:	70 93 04 02 	sts	0x0204, r23	; 0x800204 <bmp_temp_x100+0x1>
      9a6:	80 93 05 02 	sts	0x0205, r24	; 0x800205 <bmp_temp_x100+0x2>
      9aa:	90 93 06 02 	sts	0x0206, r25	; 0x800206 <bmp_temp_x100+0x3>
-		UART_writeString("TEMP=");
+		UART_writeString("TEMP=");//Debugging
      9ae:	84 ea       	ldi	r24, 0xA4	; 164
      9b0:	91 e0       	ldi	r25, 0x01	; 1
      9b2:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeInt(bmp_temp_x100);
+		UART_writeInt(bmp_temp_x100);//Debugging
      9b6:	60 91 03 02 	lds	r22, 0x0203	; 0x800203 <bmp_temp_x100>
      9ba:	70 91 04 02 	lds	r23, 0x0204	; 0x800204 <bmp_temp_x100+0x1>
      9be:	80 91 05 02 	lds	r24, 0x0205	; 0x800205 <bmp_temp_x100+0x2>
      9c2:	90 91 06 02 	lds	r25, 0x0206	; 0x800206 <bmp_temp_x100+0x3>
      9c6:	0e 94 20 06 	call	0xc40	; 0xc40 <UART_writeInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      9ca:	88 e8       	ldi	r24, 0x88	; 136
      9cc:	91 e0       	ldi	r25, 0x01	; 1
      9ce:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
 		
-		int32_t raw = BMP280_ReadTempRaw();
+		int32_t raw = BMP280_ReadTempRaw();//Debugging
      9d2:	0e 94 65 01 	call	0x2ca	; 0x2ca <BMP280_ReadTempRaw>
      9d6:	6b 01       	movw	r12, r22
      9d8:	7c 01       	movw	r14, r24
 
-		UART_writeString("RAW=");
+		UART_writeString("RAW=");//Debugging
      9da:	8a ea       	ldi	r24, 0xAA	; 170
      9dc:	91 e0       	ldi	r25, 0x01	; 1
      9de:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeInt(raw);
+		UART_writeInt(raw);//Debugging
      9e2:	c7 01       	movw	r24, r14
      9e4:	b6 01       	movw	r22, r12
      9e6:	0e 94 20 06 	call	0xc40	; 0xc40 <UART_writeInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      9ea:	88 e8       	ldi	r24, 0x88	; 136
      9ec:	91 e0       	ldi	r25, 0x01	; 1
      9ee:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1682,17 +1668,17 @@ int main(void)
      a02:	0e 94 18 04 	call	0x830	; 0x830 <clasificarTemp>
      a06:	80 93 07 02 	sts	0x0207, r24	; 0x800207 <temperature_condition>
 
-		UART_writeString("TEMP_STATE=");
+		UART_writeString("TEMP_STATE=");//Debugging
      a0a:	8f ea       	ldi	r24, 0xAF	; 175
      a0c:	91 e0       	ldi	r25, 0x01	; 1
      a0e:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(temperature_condition);
+		UART_writeUInt(temperature_condition);//Debugging
      a12:	60 91 07 02 	lds	r22, 0x0207	; 0x800207 <temperature_condition>
      a16:	70 e0       	ldi	r23, 0x00	; 0
      a18:	80 e0       	ldi	r24, 0x00	; 0
      a1a:	90 e0       	ldi	r25, 0x00	; 0
      a1c:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      a20:	88 e8       	ldi	r24, 0x88	; 136
      a22:	91 e0       	ldi	r25, 0x01	; 1
      a24:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1702,17 +1688,17 @@ int main(void)
      a2c:	0e 94 29 04 	call	0x852	; 0x852 <stepper_from_temp>
      a30:	80 93 01 02 	sts	0x0201, r24	; 0x800201 <stepper_command>
 
-		UART_writeString("STEP=");
+		UART_writeString("STEP=");//Debugging
      a34:	8b eb       	ldi	r24, 0xBB	; 187
      a36:	91 e0       	ldi	r25, 0x01	; 1
      a38:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(stepper_command);
+		UART_writeUInt(stepper_command);//Debugging
      a3c:	60 91 01 02 	lds	r22, 0x0201	; 0x800201 <stepper_command>
      a40:	70 e0       	ldi	r23, 0x00	; 0
      a42:	80 e0       	ldi	r24, 0x00	; 0
      a44:	90 e0       	ldi	r25, 0x00	; 0
      a46:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      a4a:	88 e8       	ldi	r24, 0x88	; 136
      a4c:	91 e0       	ldi	r25, 0x01	; 1
      a4e:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1732,17 +1718,17 @@ int main(void)
      a62:	0e 94 af 03 	call	0x75e	; 0x75e <GetSlaveData>
      a66:	80 93 08 02 	sts	0x0208, r24	; 0x800208 <distance_condition>
 
-		UART_writeString("DIST=");
+		UART_writeString("DIST=");//Debugging
      a6a:	81 ec       	ldi	r24, 0xC1	; 193
      a6c:	91 e0       	ldi	r25, 0x01	; 1
      a6e:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(distance_condition);
+		UART_writeUInt(distance_condition);//Debugging
      a72:	60 91 08 02 	lds	r22, 0x0208	; 0x800208 <distance_condition>
      a76:	70 e0       	ldi	r23, 0x00	; 0
      a78:	80 e0       	ldi	r24, 0x00	; 0
      a7a:	90 e0       	ldi	r25, 0x00	; 0
      a7c:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      a80:	88 e8       	ldi	r24, 0x88	; 136
      a82:	91 e0       	ldi	r25, 0x01	; 1
      a84:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1799,17 +1785,17 @@ int main(void)
      af6:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <__DATA_REGION_ORIGIN__>
 		}
 		
-		UART_writeString("SERVO=");
+		UART_writeString("SERVO=");//Debugging
      afa:	87 ed       	ldi	r24, 0xD7	; 215
      afc:	91 e0       	ldi	r25, 0x01	; 1
      afe:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
-		UART_writeUInt(servo_command);
+		UART_writeUInt(servo_command);//Debugging
      b02:	60 91 00 02 	lds	r22, 0x0200	; 0x800200 <servo_command>
      b06:	70 e0       	ldi	r23, 0x00	; 0
      b08:	80 e0       	ldi	r24, 0x00	; 0
      b0a:	90 e0       	ldi	r25, 0x00	; 0
      b0c:	0e 94 3e 06 	call	0xc7c	; 0xc7c <UART_writeUInt>
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      b10:	88 e8       	ldi	r24, 0x88	; 136
      b12:	91 e0       	ldi	r25, 0x01	; 1
      b14:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>
@@ -1907,7 +1893,7 @@ int main(void)
 		//Cosas del ESP32 --------------------------------------------------------------------------------------------------------------
 		//UART_SendSensorData(gas_condition, distance_condition, temp_ent, temp_dec);
 		
-		UART_writeString("\r\n");
+		UART_writeString("\r\n");//Debugging
      bbe:	88 e8       	ldi	r24, 0x88	; 136
      bc0:	91 e0       	ldi	r25, 0x01	; 1
      bc2:	0e 94 13 06 	call	0xc26	; 0xc26 <UART_writeString>

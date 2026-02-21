@@ -861,14 +861,14 @@ END GROUP
  .debug_abbrev  0x00000970      0x1ee main.o
  .debug_abbrev  0x00000b5e      0x169 UART.o
 
-.debug_line     0x00000000      0xed2
+.debug_line     0x00000000      0xeba
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x134 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.7.374/gcc/dev/atmega328p/avr5/crtatmega328p.o
- .debug_line    0x00000134      0x329 bmp280.o
- .debug_line    0x0000045d      0x271 I2C.o
- .debug_line    0x000006ce      0x25f lcd.o
- .debug_line    0x0000092d      0x418 main.o
- .debug_line    0x00000d45      0x18d UART.o
+ .debug_line    0x00000134      0x311 bmp280.o
+ .debug_line    0x00000445      0x271 I2C.o
+ .debug_line    0x000006b6      0x25f lcd.o
+ .debug_line    0x00000915      0x418 main.o
+ .debug_line    0x00000d2d      0x18d UART.o
 
 .debug_frame    0x00000000      0x3f0
  *(.debug_frame)

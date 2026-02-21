@@ -5,8 +5,8 @@
 #define IO_USERNAME  "Dohrim"
 #define IO_KEY       "aio_Hfmp94NvhBihgbhrKUDPOJ3XHbPZ"
 
-#define WIFI_SSID "Ayumu"
-#define WIFI_PASS "Saturno2021"
+#define WIFI_SSID ""
+#define WIFI_PASS ""
 
 #include "AdafruitIO_WiFi.h"
 
